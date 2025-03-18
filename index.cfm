@@ -15,7 +15,8 @@
 		12/03/14 - BJS - Added check box for Student Teachers
 					   - Added Student Teacher to Report/export drop down
 		01/21/16 - BJS - Added checkboxes for JRE, MCVS, and IA	
-		10/07/19 - BJS - Added check box for Student Teacher (FP with CDE) add	(FP with D51)	 
+		10/07/19 - BJS - Added check box for Student Teacher (FP with CDE) add	(FP with D51)
+        03/18/25 - BJS - Adding Ability to Delete Files	 
 		--->
         
         
@@ -27,6 +28,8 @@
 		StepNum = 30 - Add Atachment (from enter new data page)
 		StepNum = 40 - SSN was in database already make edit or ignore entry
 		StepNum = 50 - Reports / Exports
+        Stepnum = 60 exports I think
+        StpeNum = 70 - Delete Attachements (probably won't do it in a step but some other way)
 		StepNum = 997 - Update Information
 		StepNum = 998 - Insert Data into Database
 		StepNum = 999 - Logout --->
@@ -138,7 +141,7 @@
             
             
             <cflocation url="index.cfm?tryagain" addtoken="no">
-        <cfelseif #getaccounts.cn# eq 'bshay' or #getaccounts.cn# eq 'rachelt' or #getaccounts.cn# eq 'jenann' or #getaccounts.cn# eq 'lhudson' or #getaccounts.cn# eq 'crystal' or #getaccounts.cn# eq 'hart' or #getaccounts.cn# eq 'bchandle' or #getaccounts.cn# eq 'cness' or #getaccounts.cn# eq 'scalvert' or #getaccounts.cn# eq 'bnieslan' or #getaccounts.cn# eq 'bandrews' or #getaccounts.cn# eq 'kbeckel' or #getaccounts.cn# eq 'sogdon'>
+        <cfelseif #getaccounts.cn# eq 'bshay' or #getaccounts.cn# eq 'rachelt' or #getaccounts.cn# eq 'jenann' or #getaccounts.cn# eq 'lhudson' or #getaccounts.cn# eq 'crystal' or #getaccounts.cn# eq 'hart' or #getaccounts.cn# eq 'bchandle' or #getaccounts.cn# eq 'cness' or #getaccounts.cn# eq 'scalvert' or #getaccounts.cn# eq 'bnieslan' or #getaccounts.cn# eq 'bandrews' or #getaccounts.cn# eq 'kbeckel'>
 			<!--- Log login attempt --->
             <cfquery name="LogFailed" datasource="hrinfopath">
                 INSERT INTO tblFingerPrint_LogInfo
@@ -729,7 +732,7 @@
                             	<cfloop from="1" to="#GetAttachments.RecordCount#" index="i">
                                 	<!---<a href="\\ifasbitech\bi-tech$\HR Finger Print\Files\#GetAttachments.FileName[i]#" download>#GetAttachments.FileName[i]#</a><br />--->
                                 	
-                                	<a href=".\Files\#GetAttachments.FileName[i]#" download>#GetAttachments.FileName[i]#</a><br />
+                                	<a href=".\Files\#GetAttachments.FileName[i]#" download>#GetAttachments.FileName[i]#</a> - <a href="index.cfm?stepnum=70&fileid=#GetAttachments.index[i]#">delete</a><br />
                                 	<!---<cfhttp method="Get" url="" path="\\ifasbitech\bi-tech$\HR Finger Print\Files\" file="#GetAttachments.FileName[i]#">#cfhttp.FileContent#<br>--->
                                 	
                                 </cfloop>
@@ -838,7 +841,7 @@
 <cfif isDefined("form.fileUpload")>
 	<cffile action="upload"
        		fileField="fileUpload"
-         	destination="D:\intranet\2003\apps\FingerPrint\Files"
+         	destination="#ExpandPath("./Files")#"
             nameconflict="makeunique">
          	<p>Thank you, your file has been uploaded.</p>
      <cfset Session.FileName = '#cffile.serverFileName#.#cffile.serverfileext#'>
@@ -859,7 +862,7 @@
 <cfif isDefined("form.fileUpload2") and #form.fileUpload2# gt ''>
 	<cffile action="upload"
        		fileField="fileUpload2"
-         	destination="D:\intranet\2003\apps\FingerPrint\Files"
+         	destination="#ExpandPath("./Files")#"
             nameconflict="makeunique">
          	<p>Thank you, your file has been uploaded.</p>
      <cfset Session.FileName2 = '#cffile.serverFileName#.#cffile.serverfileext#'>
@@ -1131,7 +1134,109 @@
 <!--- Export All STA --->
 <cfelseif url.StepNum eq 61>
 	<cfinclude template="ExportSTA.cfm">
+
+<!--- Delete Attachements --->
+<cfelseif url.StepNum eq 70>
+    <!--- &fpid=#SearchFP.FPID[i]# --->
+    <cfif isdefined('form.delete')>
+        <!--- Get file name --->
         
+        <cfquery name="getFileInfo" datasource="hrinfopath">
+            SELECT *
+            FROM tblFP_AttachedFiles
+            WHERE [index] = #url.fileid#        
+        </cfquery>
+        
+        <cfoutput>fileid: #url.fileid#<br>File Name: <a href=".\Files\#getFileInfo.FileName#">#getFileInfo.FileName#</a><br><br></cfoutput>
+
+        <!--- delete file from directory  --->
+        <cftry>
+            <!--- <cffile action="delete" file="D:\intranet\2003\apps\FingerPrintNew\Files\#getFileInfo.FileName#"> --->
+            <cfset filePath = expandPath("./Files/#getFileInfo.FileName#")>
+            <cffile action="delete" file="#filePath#">
+        <cfcatch type="Any">
+            <cflog file="deleteFileError" text="Error Deleting File: #cfcatch.Message# - #cfcatch.Detail#">
+            <cfoutput >
+                Error Message: #cfcatch.Message#<br>
+                Error Detail: #cfcatch.Detail#<br>
+                Error Type: #cfcatch.Type#<br>
+            </cfoutput>
+        </cfcatch>
+        </cftry>
+
+        <cfset tempFPEMPID = #url.fpid#>
+        <cfset tempFileID = #url.fileid#>
+
+        <!--- delete from database --->
+        <cftry>
+            <cfquery name="DeletFromDB" datasource="hrinfopath">
+                DELETE FROM tblFP_AttachedFiles
+                WHERE FP_EmpID = <cfqueryparam value="#tempFPEMPID#" cfsqltype="cf_sql_integer">
+                    AND [index] = <cfqueryparam value="#tempFileID#" cfsqltype="cf_sql_integer">
+            </cfquery>
+            <cfcatch type="any">
+                <cfoutput>Error deleting record: #cfcatch.message#"</cfoutput>                    
+            </cfcatch>
+        </cftry>
+
+        <!--- Log Delete attempt --->
+        <cfquery name="LogDelete" datasource="hrinfopath">
+            INSERT INTO tblFingerPrint_LogInfo
+                (DateTime, LogInfo, IPAddress, FPUser)    
+            VALUES
+                (
+                    <cfqueryparam value="#NOW()#" cfsqltype="cf_sql_timestamp">,
+                    <cfqueryparam value="Delete File for #Session.FPID#" cfsqltype="cf_sql_varchar" >,
+                    <cfqueryparam value="#CGI.REMOTE_ADDR#" cfsqltype="cf_sql_varchar">,
+                    <cfqueryparam value="MESA\#Session.username#" cfsqltype="cf_sql_varchar">
+                )
+        </cfquery>
+
+        <!--- return to stepnum = 21 ---> 
+        <cflocation url="index.cfm?StepNum=21&fpid=#Session.FPID#">
+    </cfif>
+
+    <!--- <cfoutput>Deleting File for FPID #Session.FPID# file id: #url.fileid#</cfoutput> --->
+    
+    <!--- Get file info for fileid --->
+    <cfif isdefined('url.fileid')>
+        <cfquery name="getFileInfo" datasource="hrinfopath">
+            SELECT *
+            FROM tblFP_AttachedFiles
+            WHERE [index] = #url.fileid#        
+        </cfquery>
+        <cfoutput>file id is: "#url.fileid#" </cfoutput>
+        <!--- Get Emp information --->
+        <cfquery name="GetData" datasource="hrinfopath">
+            SELECT	*
+            FROM	tblFingerPrintDB
+            WHERE	FPID = #Session.FPID#
+        </cfquery>
+
+        <cfform name="deleteFiles" method="post" action="index.cfm?StepNum=70&fileid=#url.fileid#&fpid=#getFileInfo.FP_EmpID#">
+            <center>
+                <table>
+                    <tr>
+                        <td colspan="2" align="center">Delete File</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" align="center"><cfoutput>#GetData.FName# #GetData.LName#</cfoutput> </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" align="center"><cfoutput>#getFileInfo.FP_EmpID#</cfoutput></td>
+                    </tr>
+                    <tr>
+                        <td>File Name:</td>
+                        <td><cfoutput>#getFileInfo.FileName#</cfoutput></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" align="center"><cfinput type="submit" name="delete" value="Delete"></td>
+                    </tr>
+                </table>
+            </center>
+        </cfform>
+    </cfif>
+
 <!--- Update Data --->
 <cfelseif url.Stepnum eq 997>
 	<cfquery name="update" datasource="hrinfopath">

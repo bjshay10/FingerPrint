@@ -32,8 +32,8 @@
 		StepNum = 999 - Logout --->
 
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"><!-- InstanceBegin template="/Templates/fullpage.dwt.cfm" codeOutsideHTMLIsLocked="false" -->
+<!DOCTYPE html>
+<html lang="en"><!-- InstanceBegin template="/Templates/fullpage.dwt.cfm" codeOutsideHTMLIsLocked="false" -->
 
 <head>
   	<!-- InstanceBeginEditable name="head" -->
@@ -53,17 +53,15 @@
 	<!-- InstanceEndEditable -->
 
 </head>
-<cfdump var="#form#" />
 
 <body>
 <div id="wrapper">
 	<div id="headercontainer">
-  	<div id="headerimages">
-			<img src="https://www.mesa.k12.co.us/images/logo.jpg" align="left" alt="Mesa County Valley School District 51">
- 			<cfinclude template="/2003/templates/components/rotatingphotos.cfm" />
+  	<div id="headerimages"> <a href="https://www.d51schools.org"><img src="https://www.mesa.k12.co.us/images/logo.jpg" align="left" alt="Mesa County Valley School District 51"></a>
+ <!---			<cfinclude template="/2003/templates/components/rotatingphotos.cfm" />--->
 		</div>
 		<div id="headersprybar">
-  		<cfinclude template="/2003/templates/components/sprybar.cfm" />
+  		<!---<cfinclude template="/2003/templates/components/sprybar.cfm" />--->
 		</div> 
 	</div>
 <!---	<div id="headersearchbar">
@@ -71,9 +69,10 @@
    </div>--->
 	<div id="maincontainer">
   	<div id="maincontentfull">
-    		<span class="heading">
+    <main>
+    	<h1><span class="heading"> 
 					<!-- InstanceBeginEditable name="PageTitle" --><center>Finger Print</center><!-- InstanceEndEditable -->
-   	  	</span><br />
+   	  	</span></h1>
 				 <!-- InstanceBeginEditable name="Content" -->
 <!--- Set Initial StepNum --->
 <cfif not isdefined('StepNum')>
@@ -1252,11 +1251,14 @@
 	<cflocation url="https://intranet.mesa.k12.co.us/2003/apps/FingerPrint/index.cfm">
 <!--- End of Steps --->
 </cfif>
-   			<!-- InstanceEndEditable --> 	
+   			<!-- InstanceEndEditable -->
+     </main>        	
   	</div>
 	 	<br class="clearfloat" />
   	<div id="footer" class="noprint">
+    <footer>
   	<cfinclude template="/2003/templates/components/footer.cfm">
+    </footer>
   </div>
 </div>
 </div>
